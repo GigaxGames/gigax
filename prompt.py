@@ -80,8 +80,7 @@ if __name__ == "__main__":
         CharacterAction(
             command="Say",
             protagonist=protagonist,
-            target=items[0],
-            content="What a fine sword!",
+            parameters=[items[0], "What a fine sword!"],
         )
     ]
 

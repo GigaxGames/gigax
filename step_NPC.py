@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import time
@@ -7,7 +6,9 @@ import traceback
 from openai import AsyncOpenAI
 from llama_cpp import Llama
 
-from action_formatter import generate_typed_skill_model, parse_action
+from action_formatter import (
+    parse_action,
+)
 from models import (
     Character,
     CharacterAction,
@@ -15,6 +16,9 @@ from models import (
     Location,
     ProtagonistCharacter,
 )
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger("uvicorn")
 
@@ -22,11 +26,13 @@ logger = logging.getLogger("uvicorn")
 async def generate_openai(
     messages: list,
     temperature: float = 0.8,
-    model: str = "mistral_7b",
-    actions_schema: str | None = None,
+    model: str = "mistral_7b_regex",
+    guided_regex: str | None = None,
 ) -> str:
 
-    client = AsyncOpenAI(base_url=os.getenv("OPENAI_API_BASE"))
+    client = AsyncOpenAI(
+        base_url=os.getenv("OPENAI_API_BASE"), api_key=os.getenv("OPENAI_API_KEY")
+    )
 
     # Time the query
     start = time.time()
@@ -44,11 +50,11 @@ async def generate_openai(
         max_tokens=100,
         temperature=temperature,
         top_p=0.95,
-        extra_body=dict(guided_json=actions_schema),
+        extra_body=dict(guided_regex=guided_regex),
     )
 
     # Log the query time
-    logger.info(f"Query time: {time.time() - start}")
+    print(f"Query time: {time.time() - start}")
 
     # Return the NPC's response
     return response.choices[0].message.content  # type: ignore
@@ -56,7 +62,7 @@ async def generate_openai(
 
 def generate_local(
     messages: list,
-) -> str:
+):
     llm = Llama(
         model_path="./models/stablelm-zephyr-3b.Q4_K_M.gguf",
         chat_format="chatml",
@@ -69,9 +75,6 @@ def generate_local(
         ],
         max_tokens=30,
     )
-    print(res)
-    exit()
-    return res
 
 
 async def get_input(
@@ -88,21 +91,18 @@ async def get_input(
     messages = [{"role": "user", "content": f"{prompt}"}]
 
     logger.info(f"Prompting NPC {protagonist.name} with the following prompt: {prompt}")
-    model = generate_typed_skill_model(protagonist, NPCs, locations, items)
-    actions_schema = json.dumps(model.model_json_schema(), indent=2)
+    guided_regex = protagonist.get_combined_regex(NPCs, locations, items)
 
     # Generate the response
-    res = await generate_openai(messages, actions_schema=actions_schema)
+    res = await generate_openai(messages, guided_regex=guided_regex.pattern)
 
-    # Parse it:
     try:
-        parsed_action = parse_action(protagonist, res, NPCs, locations, items)
+        # Parse response
+        parsed_action = parse_action(
+            res, protagonist, NPCs, locations, items, guided_regex
+        )
     except Exception:
         logger.error(f"Error while parsing the action: {traceback.format_exc()}")
 
-    logger.info(f"NPC {protagonist.name} responded with: {res}")
+    logger.info(f"NPC {protagonist.name} responded with: {parsed_action}")
     return parsed_action
-
-
-if __name__ == "__main__":
-    generate_local(["Hello"])

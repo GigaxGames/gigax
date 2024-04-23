@@ -13,12 +13,26 @@ class ParameterType(str, Enum):
     other = "<other>"
 
 
-class Location(BaseModel):
+class Object(BaseModel):
     name: str
     description: str
 
     def __str__(self):
+        return f"{self.name}"
+
+    def to_training_format(self) -> str:
+        """
+        Print the character according to the training format.
+        """
         return f"{self.name}: {self.description}"
+
+
+class Location(Object):
+    pass
+
+
+class Item(Object):
+    pass
 
 
 class Skill(BaseModel):
@@ -44,45 +58,42 @@ class Skill(BaseModel):
 
     def to_regex(
         self,
-        authorized_characters: list[str],
-        authorized_locations: list[str],
-        authorized_items: list[str],
-    ) -> str:
-        """
-        Generate a regex string for a skill command based on current context.
-        """
-        parts = [self.name]  # Start with the command name
+        character_names: list[str],
+        location_names: list[str],
+        item_names: list[str],
+    ):
+        parts = [re.escape(self.name)]
         for param in self.parameter_types:
+            # Each group name follows format: skillname_paramtype, without <>
+            group_name = f"{self.name}_{param.value[1:-1]}"
             if param == ParameterType.character:
                 parts.append(
-                    r"(" + "|".join(map(re.escape, authorized_characters)) + ")"  # type: ignore
+                    f"(?P<{group_name}>{'|'.join(map(re.escape, character_names))})"
                 )
             elif param == ParameterType.location:
                 parts.append(
-                    r"(" + "|".join(map(re.escape, authorized_locations)) + ")"  # type: ignore
+                    f"(?P<{group_name}>{'|'.join(map(re.escape, location_names))})"
                 )
             elif param == ParameterType.item:
-                parts.append(r"(" + "|".join(map(re.escape, authorized_items)) + ")")  # type: ignore
+                parts.append(
+                    f"(?P<{group_name}>{'|'.join(map(re.escape, item_names))})"
+                )
             elif param == ParameterType.amount:
-                parts.append(r"(\d+)")
+                parts.append(f"(?P<{group_name}>\\d+)")
             elif param == ParameterType.content:
-                parts.append(r'("([^"]*)")')  # Match content within quotes
+                parts.append(
+                    f'(?P<{group_name}>"[^"]*")'
+                )  # Match content within quotes
+        regex = r"\s+".join(parts)
+        return regex
 
-        return r"\s".join(parts)
 
-
-class Character(BaseModel):
+class Character(Object):
     """
     Describes a character in the game world, i.e. an adventurer or an NPC.
     """
 
-    name: str
-    description: str
     current_location: Location
-
-    # Add a way to print the location (name: description)
-    def __str__(self):
-        return f"{self.name}: {self.description}"
 
 
 class ProtagonistCharacter(Character):
@@ -91,89 +102,37 @@ class ProtagonistCharacter(Character):
     skills: list[Skill] = Field(..., description="Skills that the character can use.")
     psychological_profile: str
 
+    def get_combined_regex(
+        self,
+        authorized_characters: list[Character],
+        authorized_locations: list[Location],
+        authorized_items: list[Item],
+    ) -> re.Pattern:
+        """
+        Generate a combined regex pattern for all skills.
+        """
+        # Get names of al authorized characters, locations, and items
+        characters_names = [char.name for char in authorized_characters]
+        locations_names = [loc.name for loc in authorized_locations]
+        items_names = [item.name for item in authorized_items]
 
-class Item(BaseModel):
-    name: str
-    description: str
-
-    def __str__(self):
-        return f"{self.name}: {self.description}"
+        # Generate a combined regex pattern for all skills
+        combined_regex_parts = [
+            skill.to_regex(characters_names, locations_names, items_names)
+            for skill in self.skills
+        ]
+        combined_regex = "|".join(combined_regex_parts)
+        return re.compile(combined_regex, re.IGNORECASE)
 
 
 class CharacterAction(BaseModel):
     command: str
     protagonist: Character
-    target: Optional[Character | Item | Location] = None
-    content: Optional[str] = None
-    amount: Optional[int] = None
+    parameters: list[Union[str, int, Object]]
 
     def __str__(self) -> str:
         """
         Print the action according to the training format: cmd_name param1 param2.
         e.g.: Alice: say Bob "Hello, how are you"
         """
-        parts = [f"{self.protagonist.name}:", self.command]
-        if self.target:
-            parts.append(str(self.target.name))
-        if self.content:
-            parts.append(f'"{self.content}"')
-        if self.amount:
-            parts.append(str(self.amount))
-        return " ".join(parts)
-
-
-if __name__ == "__main__":
-    # Context as given
-    authorized_characters = ["‘Lucky’ Louie", "Bob le bricoleur", "Charlie"]
-    authorized_locations = ["Forest", "Castle", "Town"]
-    authorized_items = ["Sword", "Shield", "Potion"]
-
-    # Define skills as provided
-    skills = [
-        Skill(
-            name="say",
-            parameter_types=[ParameterType.character, ParameterType.content],
-            description="Say something.",
-        ),
-        Skill(
-            name="move", parameter_types=[ParameterType.location], description="Move."
-        ),
-        Skill(name="grab", parameter_types=[ParameterType.item], description="Grab."),
-        Skill(
-            name="give_coins",
-            parameter_types=[ParameterType.character, ParameterType.amount],
-            description="Give coins.",
-        ),
-    ]
-
-    # Test input and expected outputs
-    test_commands = [
-        'say Alice "Hello, how are you"',
-        'say ‘Lucky’ Louie "Hello, how are you"',
-        "move Forest",
-        "grab Sword",
-        "give_coins Bob le bricoleur 100",
-        "say Bob",  # Should fail, incomplete
-        "move Dungeon",  # Should fail, invalid location
-        "grab Forest",  # Should fail, invalid item
-        "give_coins ten",  # Should fail, invalid amount
-        "give_coins",
-    ]
-
-    # Generate a combined regex pattern for all skills
-    combined_regex_parts = [
-        skill.to_regex(authorized_characters, authorized_locations, authorized_items)
-        for skill in skills
-    ]
-    combined_regex = "|".join(combined_regex_parts)
-    compiled_combined_regex = re.compile(combined_regex, re.IGNORECASE)
-
-    # Perform tests with combined regex
-    print(f"Compiled combined regex: {compiled_combined_regex}")
-    print("Testing commands with combined skills regex:")
-    for command in test_commands:
-        matches = compiled_combined_regex.match(command)
-        if matches:
-            print(f"Valid command: {command}")
-        else:
-            print(f"Invalid command: {command}")
+        return f"{self.protagonist.name}: {self.command} {' '.join(map(str, self.parameters))}"
