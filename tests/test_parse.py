@@ -1,10 +1,13 @@
 from gigax.parse import CharacterAction, get_guided_regex
-from tests.utils import create_scene
+from gigax.scene import Character, Item, Location, ProtagonistCharacter
 
 
-def test_parse():
-    _, locations, NPCs, protagonist, items, _ = create_scene()
-
+def test_parse(
+    locations: list[Location],
+    NPCs: list[Character],
+    protagonist: ProtagonistCharacter,
+    items: list[Item],
+):
     test_command = 'attack John the Brave "Hello, how are you"'
 
     # Test the compiled regex

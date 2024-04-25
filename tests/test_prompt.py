@@ -1,9 +1,17 @@
+from gigax.parse import CharacterAction
 from gigax.prompt import NPCPrompt
-from tests.utils import create_scene
+from gigax.scene import Character, Item, Location, ProtagonistCharacter
 
 
-def test_prompt():
-    prompt = NPCPrompt(*create_scene())
+def test_prompt(
+    context: str,
+    locations: list[Location],
+    NPCs: list[Character],
+    protagonist: ProtagonistCharacter,
+    items: list[Item],
+    events: list[CharacterAction],
+):
+    prompt = NPCPrompt(context, locations, NPCs, protagonist, items, events)
     assert prompt
 
     test_prompt = """- WORLD KNOWLEDGE: A vast open world full of mystery and adventure.
