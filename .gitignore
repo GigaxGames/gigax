@@ -5,6 +5,7 @@ __pycache__/
 
 # Env
 .env
+models
 
 # C extensions
 *.so
