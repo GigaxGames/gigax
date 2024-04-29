@@ -56,9 +56,9 @@ async def test_stepper_local_transformers(
     events: list[CharacterAction],
 ):
     llm = AutoModelForCausalLM.from_pretrained(
-        "TinyLlama/TinyLlama-1.1B-Chat-v1.0", output_attentions=True
+        "gigax/NPC-LLM-3_8B", output_attentions=True, trust_remote_code=True
     )
-    tokenizer = AutoTokenizer.from_pretrained("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+    tokenizer = AutoTokenizer.from_pretrained("gigax/NPC-LLM-3_8B")
     model = models.Transformers(llm, tokenizer)  # type: ignore
     # Get the NPC's input
     stepper = NPCStepper(model=model)
