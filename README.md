@@ -48,6 +48,7 @@ Gigax has new releases and features on the way. Make sure to ⭐ star and 👀 w
 ```py
 from outlines import models
 from gigax.step import NPCStepper
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # Download model from the Hub
 model_name = "Gigax/NPC-LLM-7B"
