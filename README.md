@@ -7,10 +7,6 @@
 **Add LLM-powered NPCs in your game, at runtime 👟** 
 
 
-[![Gigax Twitter][dottxt-twitter-badge]][Twitter]
-[![Discord][discord-badge]][Discord]
-
-
 ______________________________________________________________________
 
 
@@ -28,161 +24,92 @@ First time here? Go to our [setup guide](https://outlines-dev.github.io/outlines
 - [x] 🕹️ NPCs that `<speak>`, `<jump>`, `<attack>` and perform any other action you've defined
 - [x] ⚡ <1 second CPU inference on most machines, faster on GPU
 - [x] [🤗 Open-weights models available](https://huggingface.co/Gigax), fined-tuned from: Llama-3, Phi-3, Mistral, etc.
-- [x] 🔓 Structured generation with [Outlines 〰️](https://github.com/outlines-dev/outlines/tree/main) means the output format is always respected.
+- [x] 🔒 Structured generation with [Outlines 〰️](https://github.com/outlines-dev/outlines/tree/main) means the output format is always respected.
 - [ ] 📜 Runtime quest generation to make NPCs autonomous, and create dynamic narration 
 ➡ *Available through our API*
 - [ ] 😶‍🌫️ Memory creation, storage and retrieval with a Vector store
 ➡ *Available through our API*
 
 
-Outlines 〰 has new releases and features coming every week. Make sure to ⭐ star and 👀 watch this repository, follow [@dottxtai][twitter] to stay up to date!
+Gigax has new releases and features on the way. Make sure to ⭐ star and 👀 watch this repository!
 
-## Gigax company
+## Usage
 
-<div align="center">
-<img src="./docs/assets/images/dottxt.png" alt="Outlines Logo" width=100></img>
-</div>
+* Instantiating the model using outlines:
+```py
+from outlines import models
+from gigax.step import NPCStepper
 
-We started a company to keep pushing the boundaries of structured generation. Learn more about [.txt](https://twitter.com/dottxtai), and  [give our .json API a try](https://h1xbpbfsf0w.typeform.com/to/ZgBCvJHF) if you need a hosted solution ✨
+# Download model from the Hub
+model_name = "Gigax/NPC-LLM-7B"
+llm = AutoModelForCausalLM.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-## Structured generation
+# Our stepper takes in a Outlines model to enable guided generation
+# This forces the model to follow our output format
+model = models.Transformers(llm, tokenizer)
 
-The first step towards reliability of systems that include large language models
-is to ensure that there is a well-defined interface between their output and
-user-defined code. **Outlines** provides ways to control the generation of
-language models to make their output more predictable.
-
-### Multiple choices
-
-You can reduce the completion to a choice between multiple possibilities:
-
-``` python
-import outlines
-
-model = outlines.models.transformers("mistralai/Mistral-7B-Instruct-v0.2")
-
-prompt = """You are a sentiment-labelling assistant.
-Is the following review positive or negative?
-
-Review: This restaurant is just awesome!
-"""
-
-generator = outlines.generate.choice(model, ["Positive", "Negative"])
-answer = generator(prompt)
+# Instantiate a stepper: handles prompting + output parsing
+stepper = NPCStepper(model=model)
 ```
 
-### Type constraint
+* Calling the model on your game's data:
 
-You can instruct the model to only return integers or floats:
-
-
-``` python
-import outlines
-
-model = outlines.models.transformers("WizardLM/WizardMath-7B-V1.1")
-
-prompt = "<s>result of 9 + 9 = 18</s><s>result of 1 + 2 = "
-answer = outlines.generate.format(model, int)(prompt)
-print(answer)
-# 3
-
-prompt = "sqrt(2)="
-generator = outlines.generate.format(model, float)
-answer = generator(prompt, max_tokens=10)
-print(answer)
-# 1.41421356
-```
-
-### Efficient regex-structured generation
-
-Outlines also comes with fast regex-structured generation. In fact, the `choice` and
-`format` functions above all use regex-structured generation under the
-hood:
-
-``` python
-import outlines
-
-model = outlines.models.transformers("mistralai/Mistral-7B-Instruct-v0.2")
-
-prompt = "What is the IP address of the Google DNS servers? "
-
-generator = outlines.generate.text(model)
-unstructured = generator(prompt, max_tokens=30)
-
-generator = outlines.generate.regex(
-    model,
-    r"((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)",
+```py
+from gigax.parse import CharacterAction
+from gigax.scene import (
+    Character,
+    Item,
+    Location,
+    ProtagonistCharacter,
+    ProtagonistCharacter,
+    Skill,
+    ParameterType,
 )
-structured = generator(prompt, max_tokens=30)
+# Use sample data
+current_location = Location(name="Old Town", description="A quiet and peaceful town.")
+NPCs = [
+    Character(
+    name="John the Brave",
+    description="A fearless warrior",
+    current_location=current_location,
+    )
+]
+protagonist = ProtagonistCharacter(
+    name="Aldren",
+    description="Brave and curious",
+    current_location=current_location,
+    memories=["Saved the village", "Lost a friend"],
+    quests=["Find the ancient artifact", "Defeat the evil warlock"],
+    skills=[
+        Skill(
+            name="Attack",
+            description="Deliver a powerful blow",
+            parameter_types=[ParameterType.character],
+        )
+    ],
+    psychological_profile="Determined and compassionate",
+)
+items = [Item(name="Sword", description="A sharp blade")]
+events = [
+    CharacterAction(
+        command="Say",
+        protagonist=protagonist,
+        parameters=[items[0], "What a fine sword!"],
+    )
+]
 
-print(unstructured)
-# What is the IP address of the Google DNS servers?
-#
-# Passive DNS servers are at DNS servers that are private.
-# In other words, both IP servers are private. The database
-# does not contain Chelsea Manning
-
-print(structured)
-# What is the IP address of the Google DNS servers?
-# 2.2.6.1
+action = stepper.get_action(
+    context=context,
+    locations=locations,
+    NPCs=NPCs,
+    protagonist=protagonist,
+    items=items,
+    events=events,
+)
 ```
 
-Unlike other libraries, regex-structured generation in Outlines is almost as fast
-as non-structured generation.
+## API
 
-### Efficient JSON generation following a Pydantic model
+Contact us to  [give our NPC API a try](https://tally.so/r/w7d2Rz) - we'll take care of model serving, NPC memory, and more!
 
-Outlines 〰 allows to guide the generation process so the output is *guaranteed* to follow a [JSON schema](https://json-schema.org/) or [Pydantic model](https://docs.pydantic.dev/latest/):
-
-```python
-from enum import Enum
-from pydantic import BaseModel, constr
-
-import outlines
-import torch
-
-
-class Weapon(str, Enum):
-    sword = "sword"
-    axe = "axe"
-    mace = "mace"
-    spear = "spear"
-    bow = "bow"
-    crossbow = "crossbow"
-
-
-class Armor(str, Enum):
-    leather = "leather"
-    chainmail = "chainmail"
-    plate = "plate"
-
-
-class Character(BaseModel):
-    name: constr(max_length=10)
-    age: int
-    armor: Armor
-    weapon: Weapon
-    strength: int
-
-
-model = outlines.models.transformers("mistralai/Mistral-7B-Instruct-v0.2")
-
-# Construct structured sequence generator
-generator = outlines.generate.json(model, Character)
-
-# Draw a sample
-rng = torch.Generator(device="cuda")
-rng.manual_seed(789001)
-
-character = generator("Give me a character description", rng=rng)
-
-print(repr(character))
-# Character(name='Anderson', age=28, armor=<Armor.chainmail: 'chainmail'>, weapon=<Weapon.sword: 'sword'>, strength=8)
-
-character = generator("Give me an interesting character description", rng=rng)
-
-print(repr(character))
-# Character(name='Vivian Thr', age=44, armor=<Armor.plate: 'plate'>, weapon=<Weapon.crossbow: 'crossbow'>, strength=125)
-```
-
-The method works with union types, optional types, arrays, nested schemas, etc. Some field constraints are [not supported yet](https://github.com/outlines-dev/outlines/issues/215), but everything else should work.
