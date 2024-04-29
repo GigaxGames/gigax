@@ -3,6 +3,9 @@
 
 <img src="./docs/assets/images/gigax_logo_black.png" alt="Gigax Logo" width=200></img>
 
+[![sTwitter][twitter-badge]][twitter]
+[![Discord][discord-badge]][discord]
+
 
 **Add LLM-powered NPCs in your game, at runtime 👟** 
 
@@ -12,30 +15,34 @@ ______________________________________________________________________
 
 </div>
 
-
 ``` bash
 pip install gigax
 ```
-
-First time here? Go to our [setup guide](https://outlines-dev.github.io/outlines/welcome)
 
 ## Features
 
 - [x] 🕹️ NPCs that `<speak>`, `<jump>`, `<attack>` and perform any other action you've defined
 - [x] ⚡ <1 second CPU inference on most machines, faster on GPU
 - [x] [🤗 Open-weights models available](https://huggingface.co/Gigax), fined-tuned from: Llama-3, Phi-3, Mistral, etc.
-- [x] 🔒 Structured generation with [Outlines 〰️](https://github.com/outlines-dev/outlines/tree/main) means the output format is always respected.
+- [x] 🔒 Structured generation with [Outlines 〰️](https://github.com/outlines-dev/outlines/tree/main) means the output format is always respected
+- [ ] 🗄️ *Coming soon:* Local server mode, with language-agnostic API
 - [ ] 📜 Runtime quest generation to make NPCs autonomous, and create dynamic narration 
-➡ *Available through our API*
+➡ *Available **[through our API](https://tally.so/r/w7d2Rz)***
 - [ ] 😶‍🌫️ Memory creation, storage and retrieval with a Vector store
-➡ *Available through our API*
+➡ *Available **[through our API](https://tally.so/r/w7d2Rz)***
 
 
 Gigax has new releases and features on the way. Make sure to ⭐ star and 👀 watch this repository!
 
 ## Usage
 
-* Instantiating the model using outlines:
+#### Model instantiation
+
+* We provide various models on the [🤗 Huggingface hub](https://huggingface.co/Gigax):
+    * [NPC-LLM-7B](https://huggingface.co/Gigax/NPC-LLM-7B) (our Mistral-7B fine-tune)
+    * [NPC-LLM-3_8B](https://huggingface.co/Gigax/NPC-LLM-3_8B) (our Phi-3 fine-tune)
+
+* Start by instantiating one of them using outlines:
 ```py
 from outlines import models
 from gigax.step import NPCStepper
@@ -53,8 +60,20 @@ model = models.Transformers(llm, tokenizer)
 stepper = NPCStepper(model=model)
 ```
 
-* Calling the model on your game's data:
+#### Stepping an NPC
+* From there, stepping an NPC is a one-liner:
+```py
+action = stepper.get_action(
+    context=context,
+    locations=locations,
+    NPCs=NPCs,
+    protagonist=protagonist,
+    items=items,
+    events=events,
+)
+```
 
+* We provide classes to instantiate `Locations`, `NPCs`, etc. :
 ```py
 from gigax.parse import CharacterAction
 from gigax.scene import (
@@ -98,18 +117,14 @@ events = [
         parameters=[items[0], "What a fine sword!"],
     )
 ]
-
-action = stepper.get_action(
-    context=context,
-    locations=locations,
-    NPCs=NPCs,
-    protagonist=protagonist,
-    items=items,
-    events=events,
-)
 ```
 
 ## API
 
 Contact us to  [give our NPC API a try](https://tally.so/r/w7d2Rz) - we'll take care of model serving, NPC memory, and more!
 
+
+[discord]: https://discord.gg/rRBSueTKXg
+[discord-badge]: https://img.shields.io/discord/1090190447906934825?color=81A1C1&logo=discord&logoColor=white&style=flat-square
+[twitter-badge]: https://img.shields.io/twitter/follow/GigaxGames?style=social
+[twitter]: https://twitter.com/GigaxGames
