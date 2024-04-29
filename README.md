@@ -3,7 +3,7 @@
 
 <img src="./docs/assets/images/gigax_logo_black.png" alt="Gigax Logo" width=200></img>
 
-[![sTwitter][twitter-badge]][twitter]
+[![Twitter][twitter-badge]][twitter]
 [![Discord][discord-badge]][discord]
 
 
