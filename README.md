@@ -84,7 +84,6 @@ from gigax.scene import (
     Item,
     Location,
     ProtagonistCharacter,
-    ProtagonistCharacter,
     Skill,
     ParameterType,
 )
