@@ -31,7 +31,7 @@ FIX #xxxx (*link existing issues this PR will resolve*)
 <p>The PR need to meet the following code quality standards:</p>
 
 <ul>
-    <li>We adhere to <a href="https://google.github.io/styleguide/pyguide.html">Google Python style guide</a> and <a href="https://google.github.io/styleguide/cppguide.html">Google C++ style guide</a>.</li>
+    <li>We adhere to <a href="https://google.github.io/styleguide/pyguide.html">Google Python style guide</a>.</li>
     <li>The code need to be well-documented to ensure future contributors can easily understand the code.</li>
     <li>Include sufficient tests to ensure the project to stay correct and robust. This includes both unit tests and integration tests.</li>
     <li>Please add documentation to <code>docs/source/</code> if the PR modifies the user-facing behaviors of gigax. It helps gigax user understand and utilize the new features or changes.</li>
