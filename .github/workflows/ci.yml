@@ -4,15 +4,9 @@ on:
   pull_request:
     branches:
       - main
-      - CI/add-linter-pylint
   push:
     branches:
-      - CI/add-linter-pylint
-    paths:
-     - gigax
-     - gigax/**/*
-     - tests
-     - tests/**/*
+      - main
   # To test workflow without event trigger
   workflow_dispatch:
 
