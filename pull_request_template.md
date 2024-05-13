@@ -32,7 +32,7 @@ FIX #xxxx (*link existing issues this PR will resolve*)
 
 <ul>
     <li>The code needs to be well-documented to ensure future contributors can easily understand the code.</li>
-    <li>Include sufficient tests to ensure the project to stay correct and robust: these should be added to the `./tests` folder in the rpo.</li>
+    <li>Include sufficient tests to ensure the project to stay correct and robust: these should be added to the <code>./tests</code> folder in the rpo.</li>
 </ul>
 
 <h3>Notes for Large Changes</h3>
