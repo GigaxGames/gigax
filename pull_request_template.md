@@ -31,9 +31,8 @@ FIX #xxxx (*link existing issues this PR will resolve*)
 <p>The PR need to meet the following code quality standards:</p>
 
 <ul>
-    <li>We adhere to <a href="https://google.github.io/styleguide/pyguide.html">Google Python style guide</a>.</li>
-    <li>The code need to be well-documented to ensure future contributors can easily understand the code.</li>
-    <li>Include sufficient tests to ensure the project to stay correct and robust. This includes both unit tests and integration tests.</li>
+    <li>The code needs to be well-documented to ensure future contributors can easily understand the code.</li>
+    <li>Include sufficient tests to ensure the project to stay correct and robust: these should be added to the <code>./tests</code> folder in the rpo.</li>
 </ul>
 
 <h3>Notes for Large Changes</h3>
