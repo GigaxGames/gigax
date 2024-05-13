@@ -5,7 +5,9 @@ from gigax.scene import (
     Location,
     ProtagonistCharacter,
 )
+from typing import Literal
 from gigax.parse import CharacterAction
+from jinja2 import Template
 
 
 @outlines.prompt
@@ -45,3 +47,12 @@ def NPCPrompt(
 
     {{ protagonist.name }}:
     """
+
+
+def llama_chat_template(
+    message: list[dict[Literal["role", "content"], str]],
+    bos_token: str,
+    chat_template: str,
+):
+    tpl = Template(chat_template)
+    return tpl.render(messages=message, bos_token=bos_token)
