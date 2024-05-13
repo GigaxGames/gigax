@@ -74,29 +74,29 @@ class NPCStepper:
     async def generate_local(
         self,
         prompt: str,
-        model: models.LogitsGenerator,
+        llm: models.LogitsGenerator,
         guided_regex: str,
     ) -> str:
         # Time the query
         start = time.time()
 
-        generator = regex(model, guided_regex)
+        generator = regex(llm, guided_regex)
         messages = [
             {"role": "user", "content": f"{prompt}"},
         ]
-        if isinstance(model, models.LlamaCpp):  # type: ignore
+        if isinstance(llm, models.LlamaCpp):  # type: ignore
 
             # Llama-cpp-python has a convenient create_chat_completion() method that guesses the chat prompt
             # But outlines does not support it for generation, so we do this ugly hack instead
-            bos_token = model.model._model.token_get_text(
-                int(model.model.metadata["tokenizer.ggml.bos_token_id"])
+            bos_token = llm.model._model.token_get_text(
+                int(llm.model.metadata["tokenizer.ggml.bos_token_id"])
             )
             chat_prompt = llama_chat_template(
-                messages, bos_token, model.model.metadata["tokenizer.chat_template"]
+                messages, bos_token, llm.model.metadata["tokenizer.chat_template"]
             )
 
-        elif isinstance(model, models.Transformers):  # type: ignore
-            chat_prompt = model.tokenizer.tokenizer.apply_chat_template(
+        elif isinstance(llm, models.Transformers):  # type: ignore
+            chat_prompt = llm.tokenizer.tokenizer.apply_chat_template(
                 messages,
                 tokenize=False,
                 add_generation_prompt=True,
