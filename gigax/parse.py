@@ -1,3 +1,5 @@
+"""This module contains the logic to parse a command string into a CharacterAction object."""
+
 import logging
 import re
 from typing import Union
@@ -17,10 +19,14 @@ logger = logging.getLogger("uvicorn")
 
 
 class ActionParsingError(Exception):
+    """Exception raised for errors in the action parsing."""
+
     pass
 
 
 class CharacterAction(BaseModel):
+    """CharacterAction class to represent a character action."""
+
     command: str
     protagonist: ProtagonistCharacter
     parameters: list[Union[str, int, Object]]
@@ -41,6 +47,10 @@ class CharacterAction(BaseModel):
         valid_items: list[Item],
         compiled_regex: re.Pattern,
     ) -> "CharacterAction":
+        """
+        Parse a command string into a CharacterAction object.
+        """
+
         match = compiled_regex.match(command_str)
         if not match:
             raise ValueError("Invalid command format")
