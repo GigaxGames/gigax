@@ -88,7 +88,9 @@ from gigax.scene import (
     ParameterType,
 )
 # Use sample data
+context = "Medieval world"
 current_location = Location(name="Old Town", description="A quiet and peaceful town.")
+locations = [current_location] # you can add more locations to the scene
 NPCs = [
     Character(
     name="John the Brave",
