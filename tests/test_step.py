@@ -12,8 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-@pytest.mark.asyncio
-async def test_stepper_local_llamacpp(
+def test_stepper_local_llamacpp(
     context: str,
     locations: list[Location],
     NPCs: list[Character],
@@ -21,19 +20,20 @@ async def test_stepper_local_llamacpp(
     items: list[Item],
     events: list[CharacterAction],
 ):
-    llm = Llama(
-        model_path="./models/Phi-3-mini-4k-instruct-q4.gguf",  # path to GGUF file
-        n_ctx=4096,  # The max sequence length to use - note that longer sequence lengths require much more resources
-        n_threads=8,  # The number of CPU threads to use, tailor to your system and the resulting performance
-        n_gpu_layers=35,  # The number of layers to offload to GPU, if you have GPU acceleration available. Set to 0 if no GPU acceleration is available on your system.
+    llm = Llama.from_pretrained(
+        repo_id="Gigax/NPC-LLM-3_8B-GGUF",
+        filename="npc-llm-3_8B.gguf"
+        # n_gpu_layers=-1, # Uncomment to use GPU acceleration
+        # seed=1337, # Uncomment to set a specific seed
+        # n_ctx=2048, # Uncomment to increase the context window
     )
 
-    model = models.LlamaCpp(llm)  # type: ignore
+    model = models.LlamaCpp(llm) 
 
     stepper = NPCStepper(model=model)
 
     start = time.time()
-    action = await stepper.get_action(
+    action = stepper.get_action(
         context=context,
         locations=locations,
         NPCs=NPCs,
@@ -46,8 +46,7 @@ async def test_stepper_local_llamacpp(
     assert str(action) == "Aldren: Attack John the Brave"
 
 
-@pytest.mark.asyncio
-async def test_stepper_local_transformers(
+def test_stepper_local_transformers(
     context: str,
     locations: list[Location],
     NPCs: list[Character],
@@ -63,7 +62,7 @@ async def test_stepper_local_transformers(
     # Get the NPC's input
     stepper = NPCStepper(model=model)
 
-    action = await stepper.get_action(
+    action = stepper.get_action(
         context=context,
         locations=locations,
         NPCs=NPCs,
@@ -75,8 +74,7 @@ async def test_stepper_local_transformers(
     assert str(action) == "Aldren: Attack John the Brave"
 
 
-@pytest.mark.asyncio
-async def test_stepper_api(
+def test_stepper_api(
     context: str,
     locations: list[Location],
     NPCs: list[Character],
@@ -90,7 +88,7 @@ async def test_stepper_api(
 
     stepper = NPCStepper(model="mistral_7b_regex", api_key=os.getenv("API_KEY"))
 
-    action = await stepper.get_action(
+    action = stepper.get_action(
         context=context,
         locations=locations,
         NPCs=NPCs,
