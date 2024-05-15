@@ -23,6 +23,7 @@ ______________________________________________________________________
 pip install gigax
 ```
 
+
 ## Features
 
 - [x] 🕹️ NPCs that `<speak>`, `<jump>`, `<attack>` and perform any other action you've defined
@@ -36,13 +37,22 @@ pip install gigax
 
 Gigax has new releases and features on the way. Make sure to ⭐ star and 👀 watch this repository!
 
+
 ## Usage
 
 ### Model instantiation
 
+
 * We provide various models on the [🤗 Huggingface hub](https://huggingface.co/Gigax):
     * [NPC-LLM-7B](https://huggingface.co/Gigax/NPC-LLM-7B) (our Mistral-7B fine-tune)
     * [NPC-LLM-3_8B](https://huggingface.co/Gigax/NPC-LLM-3_8B) (our Phi-3 fine-tune)
+    * [NPC-LLM-3_8B-128k](https://huggingface.co/Gigax/NPC-LLM-3_8B-128k) (our Phi-3 128k context length fine-tune)
+
+* All these models are also available in [gguf](https://huggingface.co/docs/hub/en/gguf) format to run them on CPU using [llama_cpp](https://llama-cpp-python.readthedocs.io/en/latest/)
+    * [NPC-LLM-7B-GGUF](https://huggingface.co/Gigax/NPC-LLM-7B-GGUF)
+    * [NPC-LLM-3_8B-GGUF](https://huggingface.co/Gigax/NPC-LLM-3_8B-GGUF)
+    * [NPC-LLM-3_8B-128k-GGUF](https://huggingface.co/Gigax/NPC-LLM-3_8B-128k-GGUF)
+
 
 * Start by instantiating one of them using outlines:
 ```py
@@ -63,7 +73,10 @@ model = models.Transformers(llm, tokenizer)
 stepper = NPCStepper(model=model)
 ```
 
+
 ### Stepping an NPC
+
+
 * From there, stepping an NPC is a one-liner:
 ```py
 action = stepper.get_action(
@@ -75,6 +88,7 @@ action = stepper.get_action(
     events=events,
 )
 ```
+
 
 * We provide classes to instantiate `Locations`, `NPCs`, etc. :
 ```py
@@ -122,6 +136,7 @@ events = [
     )
 ]
 ```
+
 
 ## API
 
