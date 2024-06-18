@@ -88,7 +88,7 @@ def test_stepper_api(
 
     stepper = NPCStepper(model="mistral_7b_regex", api_key=os.getenv("API_KEY"))
 
-    action = stepper.get_action(
+    action = await stepper.get_action(
         context=context,
         locations=locations,
         NPCs=NPCs,
