@@ -61,13 +61,14 @@ from gigax.step import NPCStepper
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # Download model from the Hub
-model_name = "Gigax/NPC-LLM-7B"
-llm = AutoModelForCausalLM.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+llm = Llama.from_pretrained(
+    repo_id="Gigax/NPC-LLM-3_8B-GGUF",
+    filename="npc-llm-3_8B.gguf"
+    # n_gpu_layers=-1, # Uncomment to use GPU acceleration
+    # n_ctx=2048, # Uncomment to increase the context window
+)
 
-# Our stepper takes in a Outlines model to enable guided generation
-# This forces the model to follow our output format
-model = models.Transformers(llm, tokenizer)
+model = models.LlamaCpp(llm) 
 
 # Instantiate a stepper: handles prompting + output parsing
 stepper = NPCStepper(model=model)
