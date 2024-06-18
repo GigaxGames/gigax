@@ -115,7 +115,7 @@ class NPCStepper:
         logger.info(f"Query time: {time.time() - start}")
         return res
 
-    def get_action(
+    async def get_action(
         self,
         context: str,
         locations: list[Location],
