@@ -150,13 +150,10 @@ class NPCStepper:
                 guided_regex.pattern,
             )
         else:
-            loop = asyncio.get_event_loop()
-            res = loop.run_until_complete(
-                self.generate_api(
-                    self.model,
-                    prompt,
-                    guided_regex.pattern,
-                )
+            res = await self.generate_api(
+                self.model,
+                prompt,
+                guided_regex.pattern,
             )
 
         try:
