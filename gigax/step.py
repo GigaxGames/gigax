@@ -1,7 +1,6 @@
 import time
 import logging
 import traceback
-import asyncio
 from openai import AsyncOpenAI
 from gigax.prompt import NPCPrompt, llama_chat_template
 from gigax.scene import (
