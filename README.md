@@ -79,7 +79,7 @@ stepper = NPCStepper(model=model)
 
 * From there, stepping an NPC is a one-liner:
 ```py
-action = stepper.get_action(
+action = await stepper.get_action(
     context=context,
     locations=locations,
     NPCs=NPCs,
