@@ -1,7 +1,6 @@
 import time
 import logging
 import traceback
-
 from openai import AsyncOpenAI
 from gigax.prompt import NPCPrompt, llama_chat_template
 from gigax.scene import (
@@ -71,7 +70,7 @@ class NPCStepper:
         # Return the NPC's response
         return response.choices[0].message.content  # type: ignore
 
-    async def generate_local(
+    def generate_local(
         self,
         prompt: str,
         llm: models.LogitsGenerator,
@@ -144,7 +143,7 @@ class NPCStepper:
 
         # Generate the response
         if isinstance(self.model, models.LogitsGenerator):
-            res = await self.generate_local(
+            res = self.generate_local(
                 prompt,
                 self.model,
                 guided_regex.pattern,
