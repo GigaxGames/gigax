@@ -19,6 +19,10 @@ ______________________________________________________________________
 
 </div>
 
+## Installation
+
+To install the project, use the following command:
+
 ``` bash
 pip install gigax
 ```
