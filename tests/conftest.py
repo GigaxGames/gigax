@@ -45,7 +45,6 @@ def protagonist(current_location):
                 parameter_types=[ParameterType.character],
             )
         ],
-        psychological_profile="Determined and compassionate",
     )
 
 
