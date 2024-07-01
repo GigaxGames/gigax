@@ -8,7 +8,6 @@ from pydantic import BaseModel
 
 from gigax.scene import (
     Item,
-    Object,
     Location,
     Character,
     ProtagonistCharacter,
@@ -29,7 +28,7 @@ class CharacterAction(BaseModel):
 
     command: str
     protagonist: ProtagonistCharacter
-    parameters: list[Union[str, int, Object]]
+    parameters: list[Union[str, int]]
 
     def __str__(self) -> str:
         """
@@ -42,9 +41,6 @@ class CharacterAction(BaseModel):
     def from_str(
         command_str: str,
         protagonist: ProtagonistCharacter,
-        valid_characters: list[Character],
-        valid_locations: list[Location],
-        valid_items: list[Item],
         compiled_regex: re.Pattern,
     ) -> "CharacterAction":
         """
@@ -60,7 +56,8 @@ class CharacterAction(BaseModel):
                 f"Could not find a matching skill in command_str '{command_str}'"
             )
 
-        command = match.lastgroup.split("_")[0]  # Extract command name
+        # Extract the command_name while supporting multiple _ in lastgroup
+        command = "_".join(match.lastgroup.split("_")[:-1])
         action = CharacterAction(
             command=command, protagonist=protagonist, parameters=[]
         )
@@ -75,19 +72,9 @@ class CharacterAction(BaseModel):
             ]  # Remove command prefix to get parameter type
 
             # Add parameters based on their type
-            if param_type == "character":
-                # Assuming characters are directly referred by name
-                action.parameters.append(
-                    next(char for char in valid_characters if char.name == value),
-                )
-            elif param_type == "location":
-                action.parameters.append(
-                    next(loc for loc in valid_locations if loc.name == value),
-                )
-            elif param_type == "item":
-                action.parameters.append(
-                    next(item for item in valid_items if item.name == value)
-                )
+            if param_type in ["character", "NPC", "item"]:
+                # Assuming these are directly referred by name
+                action.parameters.append(value)
             elif param_type == "amount":
                 action.parameters.append(int(value))
             elif param_type == "content":

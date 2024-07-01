@@ -84,9 +84,9 @@ def test_stepper_api(
 ):
     # Get the NPC's input
     with pytest.raises(ValueError):
-        NPCStepper(model="mistral-7b-regex")
+        NPCStepper(model="llama_3_regex")
 
-    stepper = NPCStepper(model="mistral_7b_regex", api_key=os.getenv("API_KEY"))
+    stepper = NPCStepper(model="llama_3_regex", api_key=os.getenv("API_KEY"))
 
     action = await stepper.get_action(
         context=context,

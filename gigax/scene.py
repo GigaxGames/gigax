@@ -1,16 +1,15 @@
 from enum import Enum
 import re
-from typing import Union
 from pydantic import BaseModel, Field
 
 
 class ParameterType(str, Enum):
-    character = "<character>"
-    location = "<location>"
-    item = "<item>"
-    amount = "<amount>"
-    content = "<content>"
-    other = "<other>"
+    character = "character"
+    location = "location"
+    item = "item"
+    amount = "amount"
+    content = "content"
+    other = "other"
 
 
 class Object(BaseModel):
@@ -59,7 +58,7 @@ class Skill(BaseModel):
 
     name: str = Field(..., description="Skill name")
     description: str = Field(..., description="Skill description")
-    parameter_types: Union[list[ParameterType], dict] = (
+    parameter_types: list[ParameterType] = (
         Field(  # This is a Union because Cubzh's Lua sends empty lists as empty dicts
             [], description="Allowed parameter types for the given skill"
         )
@@ -81,7 +80,7 @@ class Skill(BaseModel):
         parts = [re.escape(self.name)]
         for param in self.parameter_types:
             # Each group name follows format: skillname_paramtype, without <>
-            group_name = f"{self.name}_{param.value[1:-1]}"
+            group_name = f"{self.name}_{param.value}"
             if param == ParameterType.character:
                 parts.append(
                     f"(?P<{group_name}>{'|'.join(map(re.escape, character_names))})"
@@ -107,4 +106,3 @@ class ProtagonistCharacter(Character):
     memories: list[str] = Field(..., description="Memories that the character has.")
     quests: list[str] = Field(..., description="Quests that the character is on.")
     skills: list[Skill] = Field(..., description="Skills that the character can use.")
-    psychological_profile: str

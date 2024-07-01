@@ -58,7 +58,7 @@ class NPCStepper:
 
         response = await client.chat.completions.create(
             model=model,
-            messages=messages,
+            messages=messages,  # type: ignore
             max_tokens=100,
             temperature=temperature,
             extra_body=dict(guided_regex=guided_regex),
@@ -122,7 +122,7 @@ class NPCStepper:
         protagonist: ProtagonistCharacter,
         items: list[Item],
         events: list[CharacterAction],
-    ) -> CharacterAction:
+    ) -> CharacterAction | None:
         """
         Prompt the NPC for an input.
         """
@@ -158,10 +158,9 @@ class NPCStepper:
         try:
             # Parse response
             parsed_action = CharacterAction.from_str(
-                res, protagonist, NPCs, locations, items, guided_regex
+                res, protagonist, guided_regex
             )
+            logger.info(f"NPC {protagonist.name} responded with: {parsed_action}")
+            return parsed_action
         except Exception:
             logger.error(f"Error while parsing the action: {traceback.format_exc()}")
-
-        logger.info(f"NPC {protagonist.name} responded with: {parsed_action}")
-        return parsed_action
