@@ -80,7 +80,7 @@ class Skill(BaseModel):
         parts = [re.escape(self.name)]
         for param in self.parameter_types:
             # Each group name follows format: skillname_paramtype, without <>
-            group_name = f"{self.name}_{param.value[1:-1]}"
+            group_name = f"{self.name}_{param.value}"
             if param == ParameterType.character:
                 parts.append(
                     f"(?P<{group_name}>{'|'.join(map(re.escape, character_names))})"

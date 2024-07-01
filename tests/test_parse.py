@@ -19,7 +19,7 @@ def test_parse(
 
     # Test the from_str method
     character_action = CharacterAction.from_str(
-        test_command, protagonist, NPCs, locations, items, compiled_combined_regex
+        test_command, protagonist, compiled_combined_regex
     )
     assert character_action
     assert character_action.command == "Attack"

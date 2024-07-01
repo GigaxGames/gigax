@@ -68,11 +68,11 @@ class CharacterActionRequest(BaseModel):
 )
 async def step(
     request: CharacterActionRequest,
-):
+) -> CharacterAction:
     # Format the prompt
     stepper = NPCStepper(model="llama_3_regex", api_key=os.getenv("API_KEY"))
 
-    return await stepper.get_action(
+    action = await stepper.get_action(
         context=request.context,
         locations=request.locations,
         NPCs=request.NPCs,
@@ -80,6 +80,10 @@ async def step(
         items=request.items,
         events=request.events,
     )
+    if action is None:
+        raise ValueError("No action returned from the model")
+
+    return action
 
 
 @app.get("/health-check")

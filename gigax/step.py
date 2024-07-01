@@ -152,7 +152,7 @@ class NPCStepper:
         try:
             # Parse response
             parsed_action = CharacterAction.from_str(
-                res, protagonist, NPCs, locations, items, guided_regex
+                res, protagonist, guided_regex
             )
             logger.info(f"NPC {protagonist.name} responded with: {parsed_action}")
             return parsed_action
