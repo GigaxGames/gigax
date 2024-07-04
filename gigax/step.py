@@ -1,9 +1,8 @@
 import time
 import logging
 import traceback
-
 from openai import AsyncOpenAI
-from gigax.prompt import NPCPrompt
+from gigax.prompt import NPCPrompt, llama_chat_template
 from gigax.scene import (
     Character,
     Item,
@@ -32,6 +31,11 @@ class NPCStepper:
 
         if isinstance(model, str) and not self.api_key:
             raise ValueError("You must provide an API key to use our API.")
+
+        if not isinstance(model, (models.LlamaCpp, models.Transformers)):
+            raise NotImplementedError(
+                "Only LlamaCpp and Transformers models are supported in local mode for now."
+            )
 
     async def generate_api(
         self,
@@ -66,30 +70,32 @@ class NPCStepper:
         # Return the NPC's response
         return response.choices[0].message.content  # type: ignore
 
-    async def generate_local(
+    def generate_local(
         self,
         prompt: str,
-        model: models.LogitsGenerator,
+        llm: models.LogitsGenerator,
         guided_regex: str,
     ) -> str:
-        if not isinstance(model, (models.LlamaCpp, models.Transformers)):  # type: ignore
-            raise NotImplementedError(
-                "Only LlamaCpp and Transformers models are supported in local mode for now."
-            )
-
         # Time the query
         start = time.time()
 
-        generator = regex(model, guided_regex)
-        if isinstance(model, models.LlamaCpp):  # type: ignore
+        generator = regex(llm, guided_regex)
+        messages = [
+            {"role": "user", "content": f"{prompt}"},
+        ]
+        if isinstance(llm, models.LlamaCpp):  # type: ignore
+
             # Llama-cpp-python has a convenient create_chat_completion() method that guesses the chat prompt
             # But outlines does not support it for generation, so we do this ugly hack instead
-            chat_prompt = f"<|user|>\n{prompt}<|end|>\n<|assistant|>"
-        elif isinstance(model, models.Transformers):  # type: ignore
-            messages = [
-                {"role": "user", "content": f"{prompt}"},
-            ]
-            chat_prompt = model.tokenizer.tokenizer.apply_chat_template(
+            bos_token = llm.model._model.token_get_text(
+                int(llm.model.metadata["tokenizer.ggml.bos_token_id"])
+            )
+            chat_prompt = llama_chat_template(
+                messages, bos_token, llm.model.metadata["tokenizer.chat_template"]
+            )
+
+        elif isinstance(llm, models.Transformers):  # type: ignore
+            chat_prompt = llm.tokenizer.tokenizer.apply_chat_template(
                 messages,
                 tokenize=False,
                 add_generation_prompt=True,
@@ -136,8 +142,8 @@ class NPCStepper:
         guided_regex = get_guided_regex(protagonist.skills, NPCs, locations, items)
 
         # Generate the response
-        if isinstance(self.model, models.LogitsGenerator):  # type: ignore
-            res = await self.generate_local(
+        if isinstance(self.model, models.LogitsGenerator):
+            res = self.generate_local(
                 prompt,
                 self.model,
                 guided_regex.pattern,
