@@ -9,6 +9,9 @@ class ParameterType(str, Enum):
     item = "item"
     amount = "amount"
     content = "content"
+    entity = "entity"
+    quest = "quest"
+    boolean = "boolean"
     other = "other"
 
 
@@ -76,11 +79,12 @@ class Skill(BaseModel):
         character_names: list[str],
         location_names: list[str],
         item_names: list[str],
+        quests_names: list[str] = [],
     ) -> str:
         parts = [re.escape(self.name)]
-        for param in self.parameter_types:
+        for i, param in enumerate(self.parameter_types):
             # Each group name follows format: skillname_paramtype, without <>
-            group_name = f"{self.name}_{param.value}"
+            group_name = f"{self.name}_{param.value}_{i}"
             if param == ParameterType.character:
                 parts.append(
                     f"(?P<{group_name}>{'|'.join(map(re.escape, character_names))})"
@@ -93,6 +97,16 @@ class Skill(BaseModel):
                 parts.append(
                     f"(?P<{group_name}>{'|'.join(map(re.escape, item_names))})"
                 )
+            elif param == ParameterType.entity:
+                parts.append(
+                    f"(?P<{group_name}>{'|'.join(map(re.escape, character_names + location_names + item_names))})"
+                )
+            elif param == ParameterType.quest:
+                parts.append(
+                    f"(?P<{group_name}>{'|'.join(map(re.escape, quests_names))})"
+                )
+            elif param == ParameterType.boolean:
+                parts.append(f"(?P<{group_name}>true|false)")
             elif param == ParameterType.amount:
                 parts.append(f"(?P<{group_name}>\\d+)")
             elif param == ParameterType.content:
@@ -106,3 +120,20 @@ class ProtagonistCharacter(Character):
     memories: list[str] = Field(..., description="Memories that the character has.")
     quests: list[str] = Field(..., description="Quests that the character is on.")
     skills: list[Skill] = Field(..., description="Skills that the character can use.")
+
+
+class NarratorCharacter(Object):
+    """
+    Describes a narrator character in the game world.
+    """
+
+    skills: list[Skill] = Field(..., description="Skills that the narrator can use.")
+    quests: list[str] = Field(
+        ...,
+        description="Quests given by this narrator to the player, that are currently active.",
+    )
+    completed_quests: list[str] = Field(
+        ...,
+        description="Quests given by the narrator that the Player has completed.",
+        alias="completedQuests",
+    )

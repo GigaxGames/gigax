@@ -6,6 +6,7 @@ from typing import Union
 
 from pydantic import BaseModel
 
+from gigax.quest import Quest, QuestCompleted
 from gigax.scene import (
     Item,
     Location,
@@ -47,6 +48,7 @@ class CharacterAction(BaseModel):
         Parse a command string into a CharacterAction object.
         """
 
+        logger.info(f"Command string: {command_str}")
         match = compiled_regex.match(command_str)
         if not match:
             raise ValueError("Invalid command format")
@@ -57,7 +59,7 @@ class CharacterAction(BaseModel):
             )
 
         # Extract the command_name while supporting multiple _ in lastgroup
-        command = "_".join(match.lastgroup.split("_")[:-1])
+        command = "_".join(match.lastgroup.split("_")[:-2])
         action = CharacterAction(
             command=command, protagonist=protagonist, parameters=[]
         )
@@ -67,17 +69,24 @@ class CharacterAction(BaseModel):
             if not value:
                 continue
 
-            param_type = group_name[
-                len(f"{command}_") :
-            ]  # Remove command prefix to get parameter type
+            # Remove command prefix to get parameter type
+            param_type = group_name[len(f"{command}_") :].split("_")[0]
 
+            logger.info(f"Parameter type: {param_type}")
             # Add parameters based on their type
-            if param_type in ["character", "NPC", "item"]:
+            if param_type in [
+                "character",
+                "NPC",
+                "item",
+                "boolean",
+                "entity",
+                "location",
+            ]:
                 # Assuming these are directly referred by name
                 action.parameters.append(value)
             elif param_type == "amount":
                 action.parameters.append(int(value))
-            elif param_type == "content":
+            elif param_type == "content" or param_type == "quest":
                 # Remove quotation marks if present
                 action.parameters.append(value.strip('"'))
 
@@ -89,6 +98,7 @@ def get_guided_regex(
     authorized_characters: list[Character],
     authorized_locations: list[Location],
     authorized_items: list[Item],
+    authorized_quests: list[str] = [],
 ) -> re.Pattern:
     """
     Generate a combined regex pattern for all the skills of the protagonist.
@@ -100,8 +110,25 @@ def get_guided_regex(
 
     # Generate a combined regex pattern for all skills
     combined_regex_parts = [
-        skill.to_regex(characters_names, locations_names, items_names)
+        skill.to_regex(
+            characters_names, locations_names, items_names, authorized_quests
+        )
         for skill in skills
     ]
     combined_regex = "|".join(combined_regex_parts)
+    logger.info(f"Combined regex: {combined_regex}")
     return re.compile(combined_regex, re.IGNORECASE)
+
+
+class NarratorUpdate(BaseModel):
+    """NarratorUpdate class to represent a narrator's utterance and potential quest updates."""
+
+    utterance: str
+    actions: list[CharacterAction] = []
+
+    def __str__(self) -> str:
+        """
+        Print the utterance according to the training format.
+        e.g.: "Hello, how are you?"
+        """
+        return f"NARRATOR: {self.utterance}; Actions: {self.actions}"
