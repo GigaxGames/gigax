@@ -98,43 +98,13 @@ def NPCPrompt(
 
 
 @outlines.prompt
-def NarratorNPCPrompt(
-    context: str,
-    locations: list[Location],
-    NPCs: list[Character],
-    protagonist: ProtagonistCharacter,
-    items: list[Item],
-    events: list[CharacterAction],
-):
-    """
-    You're the game master in a roleplaying game.
-    The setting: {{context}}
-    NPCs: {{ NPCs | map(attribute='name') | join(', ') }}
-    Locations: {{ locations | map(attribute='name') | join(', ') }}
-    Current location: {{ protagonist.current_location.name }}: {{ protagonist.current_location.description }}.
-    Items in location: {{ items | map(attribute='name') | join(', ') }}
-    Latest events:
-    {% for event in events %}
-    {{ event }}
-    {% endfor %}
-
-    Update the game state to make it interesting for {{protagonist.name}}. To achieve this, you will use functions that the engine will call to update the NPC's behavior.
-    Here are the functions and their associated syntax:
-    - change_mood <npc> <mood>: change the mood of an NPC, e.g. happy, sad, angry, alert, scared, tired.
-    - perform_action <action_type> <param_1> <param_2> : alert_management, report_someone, go_toilets, inspect_location, stalk_player, socialize, play_game, send_email, record_video, search_item, order_food, prepare_food, consume_food, work.
-    - say <character> <utterance>: say something to a character.
-
-    If one of your function calls fail, you will be noticed and will have the opportunity to modify the call
-    """
-
-
-@outlines.prompt
 def NarratorPrompt(
     context: str,
     locations: list[Location],
     NPCs: list[Character],
     protagonist: ProtagonistCharacter,
     narrator: NarratorCharacter,
+    skills: list[Skill],
     items: list[Item],
     events: list[CharacterAction],
 ):
@@ -145,14 +115,18 @@ def NarratorPrompt(
     Locations: {{ locations | map(attribute='name') | join(', ') }}
     Current location: {{ protagonist.current_location.name }}: {{ protagonist.current_location.description }}.
     Items in location: {{ items | map(attribute='name') | join(', ') }}
+    Current Narrator: {{narrator.name}}
     {{protagonist.name}}'s pending quest from {{narrator.name}}: {{protagonist.quests}}
-    Generate a commentary of less than 20 words of the scene from the point of view of {{narrator.name}}.
     {{narrator.description}}
+    Act as {{narrator.name}}, using one of the following skills:
+    {% for skill in skills %}
+    {{ skill.to_training_format() }}
+    {% endfor %}
     Latest events:
     {% for event in events %}
     {{ event }}
     {% endfor %}
-    {{narrator.name}} (no more than 20 words):
+    {{narrator.name}}:
     """
 
 

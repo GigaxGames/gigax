@@ -118,17 +118,3 @@ def get_guided_regex(
     combined_regex = "|".join(combined_regex_parts)
     logger.info(f"Combined regex: {combined_regex}")
     return re.compile(combined_regex, re.IGNORECASE)
-
-
-class NarratorUpdate(BaseModel):
-    """NarratorUpdate class to represent a narrator's utterance and potential quest updates."""
-
-    utterance: str
-    actions: list[CharacterAction] = []
-
-    def __str__(self) -> str:
-        """
-        Print the utterance according to the training format.
-        e.g.: "Hello, how are you?"
-        """
-        return f"NARRATOR: {self.utterance}; Actions: {self.actions}"

@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.logger import logger as fastapi_logger
 from pydantic import BaseModel
 
-from gigax.parse import CharacterAction, NarratorUpdate, ProtagonistCharacter
+from gigax.parse import CharacterAction, ProtagonistCharacter
 from gigax.scene import (
     Character,
     Item,
@@ -100,15 +100,15 @@ class NarratorActionRequest(BaseModel):
 @app.post(
     "/narrate",
     response_description="Create a narrator utterance",
-    response_model=NarratorUpdate,
+    response_model=list[CharacterAction],
 )
 async def narrate(
     request: NarratorActionRequest,
-) -> NarratorUpdate:
+) -> list[CharacterAction]:
     # Format the prompt
     stepper = NPCStepper(model="llama_3_base", api_key=os.getenv("API_KEY"))
 
-    action = await stepper.get_narrator_update(
+    actions = await stepper.get_narrator_update(
         context=request.context,
         locations=request.locations,
         NPCs=request.NPCs,
@@ -117,10 +117,10 @@ async def narrate(
         items=request.items,
         events=request.events,
     )
-    if action is None:
+    if actions is None:
         raise ValueError("No action returned from the model")
 
-    return action
+    return actions
 
 
 @app.get("/health-check")

@@ -24,7 +24,6 @@ from outlines import models
 from outlines.generate import regex  # type: ignore
 from gigax.parse import (
     CharacterAction,
-    NarratorUpdate,
     ProtagonistCharacter,
     get_guided_regex,
 )
@@ -176,13 +175,7 @@ class NPCStepper:
         # Generate the response
         res = await self._generate(prompt, guided_regex.pattern)
 
-        try:
-            # Parse response
-            parsed_action = CharacterAction.from_str(res, protagonist, guided_regex)
-            logger.info(f"NPC {protagonist.name} responded with: {parsed_action}")
-            return parsed_action
-        except Exception:
-            logger.error(f"Error while parsing the action: {traceback.format_exc()}")
+        return self._parse_action(res, protagonist, guided_regex)
 
     async def get_narrator_update(
         self,
@@ -193,9 +186,9 @@ class NPCStepper:
         narrator: NarratorCharacter,
         items: list[Item],
         events: list[CharacterAction],
-    ) -> NarratorUpdate | None:
+    ) -> list[CharacterAction]:
         """
-        Prompt the NPC for an input.
+        Prompt the Narrator for an input: utterance and quests.
         """
 
         # UTTERANCE
@@ -205,13 +198,17 @@ class NPCStepper:
             NPCs=NPCs,
             protagonist=protagonist,
             narrator=narrator,
+            skills=narrator.skills[:1],
             items=items,
             events=events,
         )
         logger.info(f"Prompting {narrator.name} for utterance: {prompt}")
-        guided_regex = re.compile(".*")
+        guided_regex = get_guided_regex(narrator.skills[:1], NPCs, locations, items)
         utterance = await self._generate(prompt, guided_regex.pattern)
-        update = NarratorUpdate(utterance=utterance)
+        actions: list[CharacterAction] = []
+        if action := self._parse_action(utterance, protagonist, guided_regex):
+            actions.append(action)
+
         logger.info(f"{narrator.name} answered with: {utterance}")
 
         # QUESTS
@@ -228,7 +225,7 @@ class NPCStepper:
         quest_prompt = quest_prompter(
             protagonist=protagonist,
             narrator_name=narrator.name,
-            skills=narrator.skills,
+            skills=narrator.skills[1:],
         )
         logger.info(f"Narrator prompt:{quest_prompt}")
 
@@ -247,16 +244,24 @@ class NPCStepper:
             },
         ]
         guided_regex = get_guided_regex(
-            narrator.skills, NPCs, locations, items, protagonist.quests
+            narrator.skills[1:], NPCs, locations, items, protagonist.quests
         )
         quests = await self._generate(messages, guided_regex.pattern)
+
+        if action := self._parse_action(quests, protagonist, guided_regex):
+            actions.append(action)
+
+        logger.info(f"Narrator responded with: {actions}")
+        return actions
+
+    def _parse_action(
+        self, res: str, protagonist: ProtagonistCharacter, guided_regex: re.Pattern
+    ) -> CharacterAction | None:
+        parsed_action = None
         try:
             # Parse response
-            parsed_action = CharacterAction.from_str(quests, protagonist, guided_regex)
+            parsed_action = CharacterAction.from_str(res, protagonist, guided_regex)
             logger.info(f"NPC {protagonist.name} responded with: {parsed_action}")
-            update.actions.append(parsed_action)
         except Exception:
             logger.error(f"Error while parsing the action: {traceback.format_exc()}")
-
-        logger.info(f"Narrator responded with: {update}")
-        return update
+        return parsed_action
