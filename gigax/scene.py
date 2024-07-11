@@ -1,6 +1,7 @@
 from enum import Enum
 import re
-from pydantic import BaseModel, Field
+from typing import Annotated
+from pydantic import BaseModel, Field, StringConstraints
 
 
 class ParameterType(str, Enum):
@@ -16,7 +17,7 @@ class ParameterType(str, Enum):
 
 
 class Object(BaseModel):
-    name: str
+    name: Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
     description: str
 
     def __str__(self):

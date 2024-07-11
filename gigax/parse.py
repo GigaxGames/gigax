@@ -6,7 +6,6 @@ from typing import Union
 
 from pydantic import BaseModel
 
-from gigax.quest import Quest, QuestCompleted
 from gigax.scene import (
     Item,
     Location,
