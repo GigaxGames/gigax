@@ -52,13 +52,13 @@ class CharacterAction(BaseModel):
         if not match:
             raise ValueError("Invalid command format")
 
+        # For commands without parameters, use the whole match as the command
         if match.lastgroup is None:
-            raise ValueError(
-                f"Could not find a matching skill in command_str '{command_str}'"
-            )
+            command = match.group(0)
+        else:
+            # Extract the command_name while supporting multiple _ in lastgroup
+            command = "_".join(match.lastgroup.split("_")[:-2])
 
-        # Extract the command_name while supporting multiple _ in lastgroup
-        command = "_".join(match.lastgroup.split("_")[:-2])
         action = CharacterAction(
             command=command, protagonist=protagonist, parameters=[]
         )
