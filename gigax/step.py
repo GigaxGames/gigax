@@ -5,7 +5,7 @@ import traceback
 from typing import Callable
 from openai import AsyncOpenAI
 from gigax.prompt import (
-    NPCPrompt,
+    NPCPromptBase,
     NarratorPrompt,
     NarratorPromptQuestGenerate,
     NarratorPromptQuestComplete,
@@ -206,7 +206,7 @@ class NPCStepper:
         guided_regex = get_guided_regex(narrator.skills[:1], NPCs, locations, items)
         utterance = await self._generate(prompt, guided_regex.pattern)
         actions: list[CharacterAction] = []
-        if action := self._parse_action(utterance, protagonist, guided_regex):
+        if action := self._parse_action(utterance, narrator, guided_regex):
             actions.append(action)
 
         logger.info(f"{narrator.name} answered with: {utterance}")
@@ -218,14 +218,16 @@ class NPCStepper:
                 f"Protagonist has quests: {protagonist.quests}. Launching quest completion prompt."
             )
             quest_prompter = NarratorPromptQuestComplete
+            skills = [s for s in narrator.skills if s.name == "complete_quest"]
         elif not protagonist.quests:
             logger.info("Protagonist has no quests. Launching quest generation prompt.")
             quest_prompter = NarratorPromptQuestGenerate
+            skills = [s for s in narrator.skills if s.name == "generate_quest"]
 
         quest_prompt = quest_prompter(
             protagonist=protagonist,
             narrator_name=narrator.name,
-            skills=narrator.skills[1:],
+            skills=skills,
         )
         logger.info(f"Narrator prompt:{quest_prompt}")
 
@@ -244,18 +246,21 @@ class NPCStepper:
             },
         ]
         guided_regex = get_guided_regex(
-            narrator.skills[1:], NPCs, locations, items, protagonist.quests
+            skills, NPCs, locations, items, protagonist.quests
         )
         quests = await self._generate(messages, guided_regex.pattern)
 
-        if action := self._parse_action(quests, protagonist, guided_regex):
+        if action := self._parse_action(quests, narrator, guided_regex):
             actions.append(action)
 
         logger.info(f"Narrator responded with: {actions}")
         return actions
 
     def _parse_action(
-        self, res: str, protagonist: ProtagonistCharacter, guided_regex: re.Pattern
+        self,
+        res: str,
+        protagonist: ProtagonistCharacter | NarratorCharacter,
+        guided_regex: re.Pattern,
     ) -> CharacterAction | None:
         parsed_action = None
         try:

@@ -1,7 +1,6 @@
 import logging
 from pydantic import BaseModel
 
-from gigax.scene import ParameterType, Skill
 
 logger = logging.getLogger("uvicorn")
 
